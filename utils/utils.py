@@ -2,6 +2,7 @@ import pandas as pd
 from groq import Groq
 import random
 import json
+from dotenv import load_dotenv
 
 def chat_with_groq(client, prompt, model, response_format):
   completion = client.chat.completions.create(
@@ -120,8 +121,8 @@ def LLM_GROQ(medicine_name):
     
     model = "llama3-70b-8192"
     # Get the Groq API key and create a Groq client
-    groq_api_key = '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'
-    #groq_api_key = "Token"
+    load_dotenv(".env")
+    groq_api_key = os.getenv("groq_api_key")
     client = Groq(
     api_key=groq_api_key
     )
