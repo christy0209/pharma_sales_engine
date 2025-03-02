@@ -55,30 +55,59 @@ def convert_to_readable_json(raw_json_string):
     try:
         # Convert the raw JSON string to a Python dictionary
         formatted_json = json.loads(raw_json_string)
-        
         # Convert back to a properly formatted JSON string
         readable_json = json.dumps(formatted_json, indent=4)
-        
+    
         return readable_json
     except json.JSONDecodeError as e:
         return f"Error decoding JSON: {e}"
+    
+def filter_json(json_data):
+    data = json.loads(json_data)
+
+    # Filter the dictionary
+    filtered_data = {}
+    for key, details in data.items():
+        # Get the list of comparisons, defaulting to an empty list if not present
+        comparisons = details.get('Comparisons', [])
+        # Filter comparisons where "Alternative Uses" is "Yes"
+        filtered_comparisons = [comp for comp in comparisons if comp.get('Alternative Uses', '').lower() == 'yes']
+        if filtered_comparisons:
+            filtered_data[key] = {'Comparisons': filtered_comparisons}
+
+    return filtered_data
+
+
 
 
 def generate_prompt(medicine_name,medicine_list):
     
-    prompt =  f"""Given the medicine '{medicine_name}', compare it with the following medicines, which are all manufactured by Glaxo SmithKline Pharmaceuticals Ltd:
-    
-    {medicine_list}
-    
+    prompt = f"""Given the medicine '{medicine_name}', compare it with the following medicines'{medicine_list}'
     Comparison Criteria:
-    Manufactured By – Identify and compare the manufacturer of '{medicine_name}' with the medicines listed above; if different, list the manufacturer of the medicine from the list.
-    Active Ingredients – Identify and compare the active components of '{medicine_name}' with the medicines listed above; if different, list the Ingredients of the medicine from the list.
-    Uses and Indications – Determine if the listed medicines serve similar medical purposes as '{medicine_name}',if different, list the usage and indications of the medicine from the list.
-    Dosage Forms – Highlight any differences in dosage forms (e.g., tablet, suspension, injection),if different, list the dosage forms of the medicine from the list.
-    Strength and Composition – Analyze variations in strength and composition, if different, list the strength and composition of the medicine from the list.
-    Side Effects & Contraindications – Compare potential side effects and contraindications; if different, list the side effects of the medicine from the list.
-    Prescription Use – Specify whether they are over-the-counter or prescription-based,if different, list the prescription use of the medicine from the list.
-    Alternative Uses – If applicable, suggest cases where the listed medicines may serve as an alternative to '{medicine_name}' return the result in json."""
+    1. Manufactured By – Identify and compare the manufacturer of '{medicine_name}' with the medicines listed above; if different, include the actual manufacturer value from the medicine in the list.
+    2. Active Ingredients – Identify and compare the active components of '{medicine_name}' with those of the medicines listed above; if they differ, include the actual active ingredients of the medicine from the list.
+    3. Uses and Indications – Determine if the listed medicines serve similar medical purposes as '{medicine_name}'; if not, include the actual uses and indications of the medicine from the list.
+    4. Dosage Forms – Highlight any differences in dosage forms (e.g., tablet, suspension, injection); if different, include the actual dosage forms of the medicine from the list.
+    5. Strength and Composition – Analyze variations in strength and composition; if they differ, include the actual strength and composition details of the medicine from the list.
+    6. Side Effects & Contraindications – Compare potential side effects and contraindications; if different, include the actual side effects and contraindications of the medicine from the list.
+    7. Prescription Use – Specify whether the medicines are over-the-counter or prescription-based; if different, include the actual prescription use details of the medicine from the list.
+    8. Alternative Uses – If applicable, suggest cases where the listed medicines may serve as an alternative to '{medicine_name}' and include the actual alternative use details from the medicine in the list.
+
+    sample output format
+               
+               'Medicine': 'Zenflox-OZ Tablet',
+               'Manufactured By': 'Mankind Pharma Ltd',
+               'Active Ingredients': 'ammoxillin',
+               'Uses and Indications': 'Muscle relaxation and pain relie',
+               'Dosage Forms': 'Injection',
+               'Strength and Composition': 'Ofloxacin (200mg) + Ornidazole (500mg)',
+               'Side Effects & Contraindications': 'Nausea,Dizziness',
+               'Prescription Use': 'Swallow it as a whole. Do not chew, crush or break it',
+               'Alternative Uses': 'Yes' - if an alternative for {medicine_name}
+           ,
+
+    Return the result in JSON format."""
+
 
     return prompt
 
@@ -91,8 +120,8 @@ def LLM_GROQ(medicine_name):
     
     model = "llama3-70b-8192"
     # Get the Groq API key and create a Groq client
-    #groq_api_key = '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'
-    groq_api_key = "Token"
+    groq_api_key = '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'
+    #groq_api_key = "Token"
     client = Groq(
     api_key=groq_api_key
     )
