@@ -3,6 +3,8 @@ from groq import Groq
 import random
 import json
 from dotenv import load_dotenv
+import os
+import io
 
 def chat_with_groq(client, prompt, model, response_format):
   completion = client.chat.completions.create(
@@ -130,3 +132,11 @@ def LLM_GROQ(medicine_name):
     llm_response = chat_with_groq(client, prompt, model, {"type": "json_object"})
     llm_response = convert_to_readable_json(llm_response)
     return llm_response
+
+def generate_df(str_data):
+    data_dict = json.loads(str_data)
+    first_value = next(iter(data_dict.values()))
+    df = pd.DataFrame(first_value)
+    df = df[df['Alternative Uses']=='Yes']
+    df = df.reset_index(drop=True)
+    return df
